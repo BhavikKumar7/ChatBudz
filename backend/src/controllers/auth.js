@@ -131,3 +131,59 @@ export function logout(req, res) {
         msg : "Logout Successfully.."
     })
 }
+
+export async function onboard(req, res){
+    try {
+        const userId = req.user._id;
+
+        const { fullName, bio, gender, sexuality, age, nativeLanguage, learningLanguage, location } = req.body;
+
+        if(!fullName || !bio || !gender || !sexuality || !age || !nativeLanguage || !learningLanguage || !location) {
+            return res.status(400).json({
+                msg : "All fields are required",
+                missingFields: [
+                    !fullName && "fullName",
+                    !bio && "bio",
+                    !gender && "gender",
+                    !sexuality && "sexuality",
+                    !age && "age",
+                    !nativeLanguage && "nativeLanguage",
+                    !learningLanguage && "learningLanguage",
+                    !location && "location",
+                ].filter(Boolean),
+            })
+        }
+
+        const updateUser = await User.findByIdAndUpdate(userId, {
+            ...req.body,
+            isOnboarded: true,
+        }, {new:true})
+
+        if(!updateUser){
+            return res.status(404).json({
+                msg : "User not found.."
+            });
+        }
+
+        try {
+            await upsertStreamUser({
+                id : updateUser._id.toString(),
+                name : updateUser.fullName,
+                image : updateUser.profilePic || "",
+            });
+            console.log(`Stream user updated after onboarding for ${updateUser.fullName}`);
+        } catch (error) {
+            console.log("Error updating stream user during onboarding: ", streamError.message);
+        }
+
+        res.status(200).json({
+            success : true,
+            user : updateUser
+        });
+    } catch (error) {
+        console.error("Onboarding error: ", error);
+        res.status(500).json({
+            msg : "Internal server error"
+        });
+    }
+}

@@ -18,7 +18,19 @@ const userSchema = new mongoose.Schema({
     },
     bio:{
         type: String,
-        default: "",
+        default: ""
+    },
+    gender:{
+        type: String,
+        default: ""
+    },
+    sexuality: {
+        type: String,
+        default: ""
+    },
+    age:{
+        type: Number,
+        default: 0
     },
     profilePic:{
         type: String,
