@@ -28,6 +28,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    dob:{
+        type: Date,
+    },
+    hoobies: {
+        type: [String],
+        default: [],
+    },
     age:{
         type: Number,
         default: 0
@@ -37,12 +44,8 @@ const userSchema = new mongoose.Schema({
         default: ""
     },
     nativeLanguage:{
-        type: String,
-        default: ""
-    },
-    learningLanguage:{
-        type: String,
-        default: ""
+        type: [String],
+        default: [],
     },
     location:{
         type: String,
