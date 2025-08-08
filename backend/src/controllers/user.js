@@ -9,9 +9,9 @@ export async function getRecommendedUsers(req, res) {
         const recommendedUsers = await User.find({
             $and: [
                 {_id: {$ne: currentUserId}},
-                {$id: {$nin: currentUser.friends}},
+                {_id: {$nin: currentUser.friends}},
                 {isOnboarded: true}
-            ]
+            ],
         });
         res.status(200).json({
             success : true,
@@ -29,7 +29,7 @@ export async function getMyFriends(req, res) {
     try {
         const user = await User.findById(req.user.id)
         .select("friends")
-        .populate("friends", "fullName profilePic nativeLanguage");
+        .populate("friends", "fullName profilePic nativeLanguage location age gender sexuality");
 
         res.status(200).json(user.friends);
     } catch (error) {
@@ -132,12 +132,32 @@ export async function acceptFriendRequest(req, res){
     }
 }
 
+export async function rejectFriendRequest(req, res) {
+    try {
+        const { id:requestId } = req.params;
+        const friendRequest = await FriendRequest.findById(requestId);
+        if(!friendRequest){
+            return res.status(404).json({ msg: "Friend request not found "});
+        }
+        if(friendRequest.recipient.toString() !== req.user.id){
+            return res.status(403).json({ msg: "You are not authorized to reject this request."});
+        }
+        
+        await FriendRequest.findByIdAndDelete(requestId);
+
+        res.status(200).json({ msg: "friend request rejected and removed." });
+    } catch (error) {
+        console.error("Error in rejectFriendRequest controller", error.message);
+        res.status(500).json({ msg: "Internal Server Error" });
+    }
+}
+
 export async function getFriendRequest(req, res) {
     try {
         const incomingRequest = await FriendRequest.find({
             recipient: req.user.id,
             status: "pending"
-        }).populate("sender", "fullName profilePic age gender nativeLanguage");
+        }).populate("sender", "fullName profilePic age gender sexuality nativeLanguage");
 
         const acceptedReqs = await FriendRequest.find({
             sender: req.user.id,
